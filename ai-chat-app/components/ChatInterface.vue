@@ -1,34 +1,73 @@
 <template>
   <div class="chat-container">
-    <div class="model-selector">
-      <select v-model="selectedModel">
-        <option v-for="(model, key) in MODEL_NAMES" :key="key" :value="key">
-          {{ model.display }} ({{ model.modelName }})
-        </option>
-      </select>
+    <v-container class="pa-0">
+      <v-row>
+        <v-col cols="12">
+          <v-select
+            v-model="selectedModel"
+            :items="
+              Object.entries(MODEL_NAMES).map(([key, value]) => ({
+                title: `${value.display} (${value.modelName})`,
+                value: key,
+              }))
+            "
+            label="AIモデルを選択"
+            variant="outlined"
+            class="mb-4"
+          ></v-select>
+        </v-col>
+      </v-row>
+    </v-container>
+
+    <div class="messages-wrapper">
+      <v-card class="messages pa-4" ref="messagesContainer">
+        <div
+          v-for="(message, index) in messages"
+          :key="index"
+          :class="['message', message.role]"
+        >
+          <v-card
+            :class="[
+              'message-content',
+              message.role === 'user' ? 'bg-primary' : 'bg-grey-lighten-3',
+            ]"
+            :color="message.role === 'user' ? 'primary' : 'grey-lighten-3'"
+            class="pa-4"
+          >
+            <div :class="message.role === 'user' ? 'text-white' : 'text-black'">
+              {{ message.content }}
+            </div>
+          </v-card>
+        </div>
+      </v-card>
     </div>
 
-    <div class="messages" ref="messagesContainer">
-      <div
-        v-for="(message, index) in messages"
-        :key="index"
-        :class="['message', message.role]"
-      >
-        <div class="message-content">{{ message.content }}</div>
-      </div>
-    </div>
-
-    <div class="input-area">
-      <textarea
-        v-model="userInput"
-        @keyup.enter="sendMessage"
-        placeholder="メッセージを入力..."
-        :disabled="isLoading"
-      ></textarea>
-      <button @click="sendMessage" :disabled="isLoading">
-        {{ isLoading ? '送信中...' : '送信' }}
-      </button>
-    </div>
+    <v-container class="input-area pa-0">
+      <v-row>
+        <v-col cols="12">
+          <v-textarea
+            v-model="userInput"
+            @keyup.enter="sendMessage"
+            label="メッセージを入力..."
+            :disabled="isLoading"
+            variant="outlined"
+            rows="3"
+            auto-grow
+            hide-details
+            class="mb-2"
+          ></v-textarea>
+          <v-btn
+            @click="sendMessage"
+            :loading="isLoading"
+            :disabled="isLoading"
+            color="primary"
+            block
+          >
+            {{ isLoading ? '送信中...' : '送信' }}
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-container>
   </div>
 </template>
 
@@ -110,32 +149,20 @@ onMounted(() => {
 
 <style scoped>
 .chat-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
   height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-.model-selector {
-  margin-bottom: 20px;
-}
-
-.model-selector select {
-  padding: 8px;
-  font-size: 16px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
+.messages-wrapper {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .messages {
-  flex: 1;
+  height: 100%;
   overflow-y: auto;
-  padding: 20px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  margin-bottom: 20px;
 }
 
 .message {
@@ -148,43 +175,11 @@ onMounted(() => {
 }
 
 .message-content {
-  padding: 12px;
   border-radius: 8px;
-  background: white;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.message.user .message-content {
-  background: #007aff;
-  color: white;
 }
 
 .input-area {
-  display: flex;
-  gap: 10px;
-}
-
-textarea {
-  flex: 1;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: none;
-  height: 60px;
-  font-family: inherit;
-}
-
-button {
-  padding: 12px 24px;
-  background: #007aff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
+  background: white;
+  padding: 16px 0;
 }
 </style>
