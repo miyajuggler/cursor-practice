@@ -1,0 +1,45 @@
+name: Pull Request Review
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Add review comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              event: 'COMMENT',
+              body: '👋 プルリクエストの自動レビューを開始しました。\n\n以下の観点でレビューを行います：\n\n### 1. コードの品質\n- コードの可読性と保守性\n- 命名規則の遵守\n- 関数やクラスの責務の明確さ\n- コードの重複の有無\n\n### 2. テスト\n- テストの網羅性\n- テストの品質と信頼性\n- エッジケースの考慮\n\n### 3. セキュリティ\n- 入力値のバリデーション\n- 認証・認可の適切な実装\n- 機密情報の取り扱い\n\n### 4. パフォーマンス\n- データベースクエリの最適化\n- メモリ使用量の考慮\n- レスポンス時間への影響\n\n### 5. アーキテクチャ\n- 設計パターンの適切な使用\n- 依存関係の管理\n- スケーラビリティの考慮\n\nレビューが完了するまでお待ちください。'
+            });
